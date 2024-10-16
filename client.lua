@@ -2,8 +2,8 @@ local socket = require("socket")
 
 local font, chatLog, inputText, connected, chatRooms, currentRoom, username
 local server
-local awaitingUsername = true  -- Utilisé pour savoir si l'utilisateur doit d'abord entrer un nom
-local threadSelected = false  -- Pour savoir si l'utilisateur a rejoint une room
+local awaitingUsername = true
+local threadSelected = false
 
 local backspaceHeld = false
 local backspaceTimer = 0
@@ -22,9 +22,8 @@ function love.load()
     chatLog = {}
     inputText = ""
     chatRooms = {"General", "Group 1", "Private - User1"}
-    currentRoom = "General"  -- Par défaut, room "General"
+    currentRoom = "General"
 
-    -- Charger les frames du GIF pour le fond animé
     for i = 1, gifFrameCount do
         gifFrames[i] = love.graphics.newImage("gif_frame_" .. i .. ".png")
     end
@@ -50,11 +49,13 @@ function love.update(dt)
         end
     end
 
-    -- Recevoir les messages du serveur
     if connected then
         local message, err = server:receive()
         if message then
-            table.insert(chatLog, message)
+            -- Vérifie que le message est en UTF-8, sinon ignore
+            if pcall(function() return message:match(".*") end) then
+                table.insert(chatLog, message)
+            end
         end
     end
 end
@@ -119,14 +120,14 @@ function drawAnimatedBackground()
 end
 
 function drawChatRoomUI()
-    love.graphics.setColor(0.2, 0.2, 0.2, 1)  -- Entête gris foncé
+    love.graphics.setColor(0.2, 0.2, 0.2, 1)
     love.graphics.rectangle("fill", 0, 0, 800, 40)
     love.graphics.setColor(1, 1, 1)
     love.graphics.printf("Thread: " .. currentRoom, 10, 10, 780, "center")
 
     local y = 50
     for i = 1, #chatLog do
-        love.graphics.setColor(0.1, 0.1, 0.1, 1)
+        love.graphics.setColor(0.9, 0.9, 0.9)
         love.graphics.print(chatLog[i], 10, y)
         y = y + 20
     end
@@ -135,4 +136,5 @@ function drawChatRoomUI()
     love.graphics.rectangle("fill", 10, 550, 780, 40)
     love.graphics.setColor(1, 1, 1)
     love.graphics.print(inputText, 15, 560)
+    love.graphics.line(15 + #inputText * font:getWidth("a") / 2, 550, 15 + #inputText * font:getWidth("a") / 2, 590)
 end

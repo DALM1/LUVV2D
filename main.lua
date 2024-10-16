@@ -4,7 +4,6 @@ local font, chatLog, inputText, connected, currentThread, username
 local server
 local awaitingUsername = true
 local threadSelected = false
-local threadPassword = nil
 local clipboardText = ""
 local cursorPosition = 0
 
@@ -16,10 +15,10 @@ local gifFrameCount = 8
 local gifCurrentFrame = 1
 
 function string:split(sep)
-  local fields = {}
-  local pattern = string.format("([^%s]+)", sep)
-  self:gsub(pattern, function(c) fields[#fields + 1] = c end)
-  return fields
+    local fields = {}
+    local pattern = string.format("([^%s]+)", sep)
+    self:gsub(pattern, function(c) fields[#fields + 1] = c end)
+    return fields
 end
 
 function love.load()
@@ -97,14 +96,13 @@ function love.keypressed(key)
             if inputText:sub(1, 5) == "/join" then
                 local params = inputText:sub(7):split(" ")
                 currentThread = params[1]
-                threadPassword = params[2] or ""
                 table.insert(chatLog, "Rejoint le thread : " .. currentThread)
-                sendMessage("/join " .. currentThread .. " " .. threadPassword)
+                sendMessage("/join " .. currentThread)
                 threadSelected = true
                 inputText = ""
                 cursorPosition = 0
             else
-                table.insert(chatLog, "Veuillez rejoindre un thread avec /join [nom_du_thread] [mot_de_passe (optionnel)]")
+                table.insert(chatLog, "Veuillez rejoindre un thread avec /join [nom_du_thread]")
             end
         else
             sendMessage(inputText)
@@ -125,13 +123,6 @@ end
 function love.keyreleased(key)
     if key == "backspace" then
         backspaceHeld = false
-    end
-end
-
-function love.mousepressed(x, y, button)
-    if button == 1 and y >= 550 and y <= 590 then
-        local clickPosition = math.floor((x - 15) / font:getWidth("a"))
-        cursorPosition = math.min(clickPosition, #inputText)
     end
 end
 
@@ -170,5 +161,5 @@ function drawChatRoomUI()
     love.graphics.rectangle("fill", 10, 550, 780, 40)
     love.graphics.setColor(1, 1, 1)
     love.graphics.print(inputText, 15, 560)
-    love.graphics.line(15 + cursorPosition * font:getWidth("a"), 550, 15 + cursorPosition * font:getWidth("a"), 590)
+    love.graphics.line(15 + cursorPosition * font:getWidth("a") / 2, 550, 15 + cursorPosition * font:getWidth("a") / 2, 590)
 end
