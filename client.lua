@@ -2,10 +2,16 @@ local socket = require("socket")
 
 local font, chatLog, inputText, connected, chatRooms, currentRoom, username
 local server
-local backgroundEffect = {time = 0, color = {0.1, 0.5, 1}}
+
+local gifFrames = {}
+local gifFrameCount = 8
+local gifCurrentFrame = 1
+
+local backspaceHeld = false
+local backspaceTimer = 0
 
 function love.load()
-    love.window.setTitle("Futuristic Neon Chat")
+    love.window.setTitle("LUVV")
     love.window.setMode(800, 600, {resizable=false})
 
     font = love.graphics.newFont(14)
@@ -16,6 +22,10 @@ function love.load()
     chatRooms = {"General", "Group 1", "Private - User1"}
     currentRoom = 1
     username = "Moi"
+
+    for i = 1, gifFrameCount do
+        gifFrames[i] = love.graphics.newImage("gif_frame_" .. i .. ".png")
+    end
 
     server = socket.connect("127.0.0.1", 12345)
     if server then
@@ -30,7 +40,13 @@ function love.load()
 end
 
 function love.update(dt)
-    backgroundEffect.time = backgroundEffect.time + dt
+    if backspaceHeld then
+        backspaceTimer = backspaceTimer + dt
+        if backspaceTimer > 0.1 then
+            inputText = inputText:sub(1, #inputText - 1)
+            backspaceTimer = 0
+        end
+    end
 
     if connected then
         local message, err = server:receive()
@@ -44,21 +60,25 @@ end
 
 function love.textinput(t)
     inputText = inputText .. t
-    backgroundEffect.color = {
-        math.random(),
-        math.random(),
-        math.random()
-    }
+
+    gifCurrentFrame = (gifCurrentFrame % gifFrameCount) + 1
 end
 
 function love.keypressed(key)
     if key == "backspace" then
+        backspaceHeld = true
         inputText = inputText:sub(1, #inputText - 1)
     elseif key == "return" and inputText ~= "" then
         sendMessage(inputText)
         inputText = ""
     elseif key == "tab" then
         currentRoom = currentRoom % #chatRooms + 1
+    end
+end
+
+function love.keyreleased(key)
+    if key == "backspace" then
+        backspaceHeld = false
     end
 end
 
@@ -71,30 +91,21 @@ function sendMessage(message)
 end
 
 function love.draw()
-    drawFuturisticBackground()
+    drawAnimatedBackground()
 
     drawChatRoomUI()
 end
 
-function drawFuturisticBackground()
+function drawAnimatedBackground()
     love.graphics.clear(0, 0, 0)
-    love.graphics.setColor(backgroundEffect.color)
-
-    for x = 0, love.graphics.getWidth(), 50 do
-        for y = 0, love.graphics.getHeight(), 50 do
-            local offset = (x + y) / 10 + backgroundEffect.time * 50
-            local alpha = math.sin(offset) * 0.5 + 0.5
-            love.graphics.setColor(backgroundEffect.color[1], backgroundEffect.color[2], backgroundEffect.color[3], alpha)
-            love.graphics.rectangle("fill", x, y, 48, 48)
-        end
-    end
+    love.graphics.draw(gifFrames[gifCurrentFrame], 0, 0, 0, love.graphics.getWidth() / gifFrames[gifCurrentFrame]:getWidth(), love.graphics.getHeight() / gifFrames[gifCurrentFrame]:getHeight())
 end
 
 function drawChatRoomUI()
-    love.graphics.setColor(0.1, 0.9, 0.9, 1)
+    love.graphics.setColor(0.1, 0.1, 0.1, 1)
     love.graphics.rectangle("fill", 0, 0, 800, 40)
     love.graphics.setColor(1, 1, 1)
-    love.graphics.printf("Room: " .. chatRooms[currentRoom], 10, 10, 780, "center")
+    love.graphics.printf("Thread " .. chatRooms[currentRoom], 10, 10, 780, "center")
 
     local y = 50
     for i = 1, #chatLog do
