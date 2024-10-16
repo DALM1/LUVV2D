@@ -64,7 +64,9 @@ function love.update(dt)
     if connected then
         local message, err = server:receive()
         if message then
-            table.insert(chatLog, message)
+            if pcall(function() return message:match(".*") end) then
+                table.insert(chatLog, message)
+            end
         end
     end
 end
@@ -161,5 +163,5 @@ function drawChatRoomUI()
     love.graphics.rectangle("fill", 10, 550, 780, 40)
     love.graphics.setColor(1, 1, 1)
     love.graphics.print(inputText, 15, 560)
-    love.graphics.line(15 + cursorPosition * font:getWidth("a") / 2, 550, 15 + cursorPosition * font:getWidth("a") / 2, 590)
+    love.graphics.line(15 + cursorPosition * font:getWidth("a") / 3, 550, 15 + cursorPosition * font:getWidth("a") / 3, 590)
 end

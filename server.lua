@@ -6,8 +6,6 @@ local threads = {}
 
 server:settimeout(0)
 
-print("Server listening lightning fast on port 12345")
-
 local function broadcast(thread, message)
     if threads[thread] then
         for _, client in ipairs(threads[thread].clients) do
@@ -21,15 +19,12 @@ while true do
     if client then
         client:settimeout(0)
         table.insert(clients, client)
-        print("Nouveau client connecté")
         client:send("LUVV > Veuillez définir votre nom d'utilisateur avec /username [votre_nom].\n")
     end
 
     for i, client in ipairs(clients) do
         local message, err = client:receive()
         if message then
-            print("Message reçu : " .. message)
-
             local command, thread, content = message:match("^/msg (%S+) /username (%S+): (.*)")
             if command == "/msg" then
                 local formattedMessage = "[" .. thread .. "] " .. content
@@ -45,7 +40,6 @@ while true do
                 table.insert(threads[thread].clients, client)
             end
         elseif err == "closed" then
-            print("Client déconnecté")
             table.remove(clients, i)
         end
     end
